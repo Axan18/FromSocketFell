@@ -16,12 +16,15 @@ class Server(val port:Int){
         }
     }
     fun CoroutineScope.handleClient(client : Socket){
-        val handler = ClientHandler(client)
         launch {
-            handler.handleWrite()
-        }
-        launch {
-            handler.handleRead()
+            val handler = ClientHandler(client)
+            handler.joinRoom()
+            launch {
+                handler.handleWrite()
+            }
+            launch {
+                handler.handleRead()
+            }
         }
     }
 }
