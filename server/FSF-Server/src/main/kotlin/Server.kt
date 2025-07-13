@@ -1,29 +1,40 @@
 package org.example
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.net.ServerSocket
 import java.net.Socket
 
-class Server(val port:Int){
-    fun start() = runBlocking {
+class Server(val port: Int) {
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    fun start() = {
         val serverSocket = ServerSocket(port)
 
-        while(true){
+        while (true) {
             val client = serverSocket.accept()
-            handleClient(client)
+            scope.handleClient(client)
         }
     }
-    fun CoroutineScope.handleClient(client : Socket){
+
+    fun CoroutineScope.handleClient(client: Socket) {
         launch {
-            val handler = ClientHandler(client)
-            handler.joinRoom()
-            launch {
-                handler.handleWrite()
-            }
-            launch {
-                handler.handleRead()
+            try {
+                val handler = ClientHandler(client)
+                coroutineScope {
+                    launch {
+                        handler.handleWrite()
+                    }
+                    launch {
+                        handler.handleRead()
+                    }
+                }
+            } finally {
+                client.close()
             }
         }
     }
