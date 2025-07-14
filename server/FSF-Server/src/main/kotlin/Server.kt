@@ -1,23 +1,19 @@
 package org.example
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import java.net.ServerSocket
-import java.net.Socket
+import io.ktor.network.selector.*
+import io.ktor.network.sockets.*
+import kotlinx.coroutines.*
 
-class Server(val port: Int) {
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    fun start() = {
-        val serverSocket = ServerSocket(port)
+
+class Server(val address: String, val port: Int) {
+    private val selectorManager = SelectorManager(Dispatchers.IO + SupervisorJob())
+
+    suspend fun start() = coroutineScope {
+        val serverSocket = aSocket(selectorManager).tcp().bind(InetSocketAddress(address, port))
 
         while (true) {
             val client = serverSocket.accept()
-            scope.handleClient(client)
+            selectorManager.handleClient(client)
         }
     }
 
