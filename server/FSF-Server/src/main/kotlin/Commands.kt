@@ -2,10 +2,11 @@ package org.example
 
 enum class Commands(val command: String) {
     EXIT("/EXIT"),
-    CONNECT("/CONNECT");
+    LIST("/LIST"),
+    JOIN("/JOIN");
 
     companion object {
-        fun fromString(str: String): Commands? = entries.find { it.command == str }
+        fun fromString(str: String): Commands? = entries.find { it.command == str.split(" ")[0] }
     }
 
 }

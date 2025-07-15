@@ -13,25 +13,18 @@ class Server(val address: String, val port: Int) {
 
         while (true) {
             val client = serverSocket.accept()
-            selectorManager.handleClient(client)
+            launch(selectorManager.coroutineContext) {
+                handleClient(client)
+            }
         }
     }
 
-    fun CoroutineScope.handleClient(client: Socket) {
-        launch {
-            try {
-                val handler = ClientHandler(client)
-                coroutineScope {
-                    launch {
-                        handler.handleWrite()
-                    }
-                    launch {
-                        handler.handleRead()
-                    }
-                }
-            } finally {
-                client.close()
-            }
+    suspend fun handleClient(client: Socket) {
+        try {
+            val handler = ClientHandler(client)
+            handler.handleConnection()
+        } finally {
+            client.close()
         }
     }
 }
